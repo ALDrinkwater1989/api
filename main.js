@@ -1,9 +1,9 @@
-const baseURL = "https://swapi.co/api/";
 
-function getData(type, cb) {
+
+function getData(url, cb) {
 
     var xhr = new XMLHttpRequest(); //create new instance of XMLHttpRequest object
-    xhr.open("GET", baseURL + type + "/");
+    xhr.open("GET", url);
     xhr.send();
 
     xhr.onreadystatechange = function() {
@@ -15,35 +15,52 @@ function getData(type, cb) {
 
 }
 
-function getTableHeaders(obj){
+function getTableHeaders(obj) {
     var tableHeaders = [];
-    
-    Object.keys(obj).forEach(function(key){
+
+    Object.keys(obj).forEach(function(key) {
         tableHeaders.push(`<td>${key}</td>`)
     });
     return `<tr>${tableHeaders}</tr>`;
 }
 
-function writeToDocument(type) {
+function generatePaginationButtons(next, prev) {
+    if (next && prev) {
+        return `<button onclick = "writeToDocument('${prev}')">Previous</button>
+        <button onclick = "writeToDocument('${next}')">Next</button>`;
+    }
+    else if (next && !prev) {
+        return `<button onclick = "writeToDocument('${next}')">Next</button>`;
+    }
+    else if (!next && prev) {
+        return `<button onclick = "writeToDocument('${prev}')">Previous</button>`;
+    }
+}
+
+function writeToDocument(url) {
     var tableRows = [];
     var el = document.getElementById("data");
-    el.innerHTML =   "";
-    getData(type, function(data){
+    el.innerHTML = "";
+    getData(url, function(data) {
+        var pagination;
+        if (data.next || data.previous) {
+            pagination = generatePaginationButtons(data.next, data.previous);
+        }
         data = data.results;
         var tableHeaders = getTableHeaders(data[0]);
         getTableHeaders(data[0]);
-        
-        data.forEach(function(item){
-         var dataRow = [];
-         
-         Object.keys(item).forEach(function(key){
-             var rowData = item[key].toString();
-             var truncateData = rowData.substring(0, 15);
-             dataRow.push(`<td>${truncateData}</td>`);
-         });
-         tableRows.push(`<tr>${dataRow}</tr>`);
+
+        data.forEach(function(item) {
+            var dataRow = [];
+
+            Object.keys(item).forEach(function(key) {
+                var rowData = item[key].toString();
+                var truncateData = rowData.substring(0, 15);
+                dataRow.push(`<td>${truncateData}</td>`);
+            });
+            tableRows.push(`<tr>${dataRow}</tr>`);
 
         });
-el.innerHTML = `<table>${tableHeaders}${tableRows}</table>`;
+        el.innerHTML = `<table>${tableHeaders}${tableRows}</table>${pagination}`;
     });
 }
